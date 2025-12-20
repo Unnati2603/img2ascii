@@ -20,7 +20,11 @@ const ASCII_CHARS: &[u8] = b"@%#*+=-:. ";
 
 struct Args {
     image: String,
+    #[arg(short, long, default_value_t = 80)]
     width: u32,
+    // #[arg(short = 'H', long)]
+    // height: Option<u32>,
+
 }
 // NOT just a struct
 // clap will generate code to parse CLI args into this struct
@@ -54,26 +58,32 @@ fn main() {
     let (w,h)=img.dimensions();
     let w = w as f32;
     let h = h as f32;
-    let aspect_ratio = h/w;          //preserve aspect ratio, interger division bad hence float 
+    let aspect_ratio = h as f32/w as f32;          //preserve aspect ratio, interger division bad hence float 
 
     // let (width, height) = img.dimensions();
     // let aspect_ratio = height as f32 / width as f32;
 
-    let new_w: u32 = 80;        //desired width input as a flag TO DO
+    let new_w = args.width;       //desired width input as a flag
 
     // let new_h=(aspect_ratio* new_w as f32) as u32;
-    let new_h=(new_w as f32 * aspect_ratio * 0.55) as u32;
-    // most terminal char are not square, they are taller than they are wider. but img pixels are square.
-    // 0.55 is a terminal correction factor.
-    // each row is 1,8 times taller than wider, lets shrink height
 
+    let char_aspect = 0.43;
+    let  new_h=(new_w as f32 * aspect_ratio*char_aspect ) as u32;
+    // most terminal char are not square, they are taller than they are wider. but img pixels are square.
+    // typical terminal chars are ~2:1 (height:width), so we need ~0.4-0.5 correction
+    // adjust this value if circle still looks like oval
+//     if let Some(h) = args.height {
+//     new_h = h;
+// }
     use image::imageops::FilterType;
     // Bring the FilterType enum into scope
 
-    let resized_img = img.resize(
+    let resized_img = img.resize_exact(
         new_w, new_h, FilterType::Nearest,
     );
-    // img.resize(width, height, filter)
+    // img.resize_exact(width, height, filter)
+    // resize_exact forces the exact dimensions (ignores original aspect ratio)
+    // we handle aspect ratio ourselves with char_aspect correction
     /*
     Nearest Neighbor resizing
     For every pixel in the new image:
@@ -88,7 +98,7 @@ fn main() {
     for y in 0..grey_img.height(){
         for x in 0..grey_img.width(){
             let pixel=grey_img.get_pixel(x,y)[0];                       //brightness
-            let unnati= (pixel as usize * ASCII_CHARS.len())/256;       // mapping
+            let unnati= (pixel as usize * ASCII_CHARS.len().saturating_sub(1))/256;       // mapping, out of bonds
             print!("{}", ASCII_CHARS[unnati] as char);
         }
         println!();             //newline after each row
