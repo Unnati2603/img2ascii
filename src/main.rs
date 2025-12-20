@@ -22,9 +22,8 @@ struct Args {
     image: String,
     #[arg(short, long, default_value_t = 80)]
     width: u32,
-    // #[arg(short = 'H', long)]
-    // height: Option<u32>,
-
+    #[arg(short = 'H', long)]
+    height: Option<u32>,
 }
 // NOT just a struct
 // clap will generate code to parse CLI args into this struct
@@ -68,13 +67,15 @@ fn main() {
     // let new_h=(aspect_ratio* new_w as f32) as u32;
 
     let char_aspect = 0.43;
-    let  new_h=(new_w as f32 * aspect_ratio*char_aspect ) as u32;
+    let mut new_h=(new_w as f32 * aspect_ratio*char_aspect ) as u32;
     // most terminal char are not square, they are taller than they are wider. but img pixels are square.
     // typical terminal chars are ~2:1 (height:width), so we need ~0.4-0.5 correction
     // adjust this value if circle still looks like oval
-//     if let Some(h) = args.height {
-//     new_h = h;
-// }
+    
+    // override with custom height if provided
+    if let Some(h) = args.height {
+        new_h = h;
+    }
     use image::imageops::FilterType;
     // Bring the FilterType enum into scope
 
