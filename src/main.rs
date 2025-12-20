@@ -1,17 +1,16 @@
-use image::{GenericImageView, imageops::FilterType};
+use image::GenericImageView;
 // GenericImageView trait gives .dimensions() and .get_pixel() methods
-// FilterType resize
 
 use clap::Parser;
 // Enables Args::parse()
 // auto gen CLI parsing code
 
-const ASCII_CHARS: &[u8] = b"@%#*+=-:. ";
+// const ASCII_CHARS: &[u8] = b"@%#*+=-:. ";
 
 // for smoother
 // const ASCII_CHARS: &[u8] =  b"$@B%8&WM#*oahkbdpqwmZ0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`. ";
 //take mono space font into account
-
+const ASCII_CHARS: &[u8] =  b"$@B%8&WM#*/\\|()1{}[]?-_+~<>i!lI;:,\"^`. ";
 
 #[derive(Parser)]
 
@@ -25,6 +24,7 @@ struct Args {
     #[arg(short = 'H', long)]
     height: Option<u32>,
 }
+
 // NOT just a struct
 // clap will generate code to parse CLI args into this struct
 //command-line arguments
