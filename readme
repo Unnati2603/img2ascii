@@ -1,13 +1,12 @@
 rust
+revision proj
 
 Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-
 check
 rustc --version
 cargo --version
-
 
 Create project
 cargo new img2ascii
@@ -18,133 +17,133 @@ cargo run
 
 Project structure
 img2ascii/
-├── Cargo.toml   ← dependencies go here
+├── Cargo.toml ← dependencies go here
 └── src/
-    └── main.rs  ← code
-
+└── main.rs ← code
 
 libraries
 Cargo.toml
 Cargo.toml is the configuration + metadata file for a Rust project.
 like package.json (Node)
 It has the following main sections:
-1. [package]      -- project metadata(necessary)
-    name = "ascii_art"   --Project/crate name (used by Cargo)
-    version = "0.1.0"    --Semantic versioning (major.minor.patch)
-    edition = "2021"     -- Rust edition (2015, 2018, 2021, 2024) ALWAYS 2021
+
+1. [package] -- project metadata(necessary)
+   name = "ascii_art" --Project/crate name (used by Cargo)
+   version = "0.1.0" --Semantic versioning (major.minor.patch)
+   edition = "2021" -- Rust edition (2015, 2018, 2021, 2024) ALWAYS 2021
 2. [dependencies] -- external libraries
-    image = "0.24.6"
-    clap = { version = "4.4.7", features = ["derive"] }
-    anyhow = "1.0.88"
-    indicatif = "0.17.6"
-    ......it pulls in the specified versions of these libraries from crates.io (Rust's package registry) when you build the project. Cargo downloads and compiles these dependencies automatically.
-3. [bin]          -- binary target configuration (optional)
-    name = "ascii"   -- binary name
-    path = "src/main.rs" -- source file path
-    ......custom executable names.
-4. [features]     -- optional features (optional)
-    default = []     -- default features
-    colored_output = [] -- custom feature
-    ......enable/disable optional functionality in dependencies.
+   image = "0.24.6"
+   clap = { version = "4.4.7", features = ["derive"] }
+   anyhow = "1.0.88"
+   indicatif = "0.17.6"
+   ......it pulls in the specified versions of these libraries from crates.io (Rust's package registry) when you build the project. Cargo downloads and compiles these dependencies automatically.
+3. [bin] -- binary target configuration (optional)
+   name = "ascii" -- binary name
+   path = "src/main.rs" -- source file path
+   ......custom executable names.
+4. [features] -- optional features (optional)
+   default = [] -- default features
+   colored_output = [] -- custom feature
+   ......enable/disable optional functionality in dependencies.
 
 Here, i have used the following libraries:
+
 1. image -- for image processing (loading, manipulating, saving images)
-2. clap  -- for command-line argument parsing
+2. clap -- for command-line argument parsing
 
 Rust syntax basics
 
 1. Variables and Mutability
-By default, variables are immutable. Use let mut to make them mutable.
-let x = 5;          // immutable
-let mut y = 10;     // mutable
-y += 5;             // now y is 15    
+   By default, variables are immutable. Use let mut to make them mutable.
+   let x = 5; // immutable
+   let mut y = 10; // mutable
+   y += 5; // now y is 15
 
 2. Data Types
-Common types include:
+   Common types include:
+
 - Integer: i32, u32, i64, u64
 - Floating-point: f32, f64
 - Boolean: bool (true, false)
 - Character: char ('a', '1', '😊')
 - String: String (growable, heap-allocated)
-let a: i32 = 10;
-let b: f64 = 3.14;
-let c: bool = true;
-let d: char = 'R';  
-let s: String = String::from("Hello, Rust!");
+  let a: i32 = 10;
+  let b: f64 = 3.14;
+  let c: bool = true;
+  let d: char = 'R';  
+  let s: String = String::from("Hello, Rust!");
 
 3. Functions
-Functions are defined using the fn keyword.
-fn add(x: i32, y: i32) -> i32 {
-    x + y
-}   
-let result = add(5, 10); // result is 15
+   Functions are defined using the fn keyword.
+   fn add(x: i32, y: i32) -> i32 {
+   x + y
+   }  
+   let result = add(5, 10); // result is 15
 
 4. Control Flow
-Use if, else if, else for conditional branching.
-let number = 7;
-if number < 5 {
-    println!("Less than 5");
-} else if number == 5 {
-    println!("Equal to 5");
-} else {
-    println!("Greater than 5");       
-}
+   Use if, else if, else for conditional branching.
+   let number = 7;
+   if number < 5 {
+   println!("Less than 5");
+   } else if number == 5 {
+   println!("Equal to 5");
+   } else {
+   println!("Greater than 5");  
+   }
 
 Use loops for iteration.
 for i in 0..5 {
-    println!("{}", i); // prints 0 to 4
+println!("{}", i); // prints 0 to 4
 }
 
 let mut count = 0;
 while count < 5 {
-    println!("{}", count);
-    count += 1;
+println!("{}", count);
+count += 1;
 }
 
 5. Printing
-Use println! macro for output.
-println!("Hello, {}!", "world"); // Hello, world!
+   Use println! macro for output.
+   println!("Hello, {}!", "world"); // Hello, world!
 
 6. Comments
-Single-line comments start with //.
-/* Multi-line comments are enclosed in /* and */. */
-// This is a single-line comment
-/* This is a
-   multi-line comment */    
+   Single-line comments start with //.
+   /_ Multi-line comments are enclosed in /_ and _/. _/
+   // This is a single-line comment
+   /_ This is a
+   multi-line comment _/
 
 7. Ownership and Borrowing
-Rust has a unique ownership model to manage memory safety without a garbage collector.
+   Rust has a unique ownership model to manage memory safety without a garbage collector.
+
 - Each value has a single owner.
 - When the owner goes out of scope, the value is dropped.
 - References allow borrowing values without taking ownership.
-let s1 = String::from("hello"); // s1 owns the string
-let s2 = &s1;                   // s2 borrows s1
-println!("{}", s2);             // prints "hello"   
+  let s1 = String::from("hello"); // s1 owns the string
+  let s2 = &s1; // s2 borrows s1
+  println!("{}", s2); // prints "hello"
 
 8. Structs
-Structs are custom data types that group related data.
-struct Point {
-    x: i32,
-    y: i32,
-}
-let p = Point { x: 10, y: 20 };
-println!("Point({}, {})", p.x, p.y); // Point(10, 20)   
+   Structs are custom data types that group related data.
+   struct Point {
+   x: i32,
+   y: i32,
+   }
+   let p = Point { x: 10, y: 20 };
+   println!("Point({}, {})", p.x, p.y); // Point(10, 20)
 
 9. Enums
-Enums define a type that can be one of several variants.
-enum Direction {
-    Up,
-    Down,
-    Left,   
+   Enums define a type that can be one of several variants.
+   enum Direction {
+   Up,
+   Down,
+   Left,  
     Right,
-}
-let dir = Direction::Up;
-match dir {
-    Direction::Up => println!("Going up!"),
-    Direction::Down => println!("Going down!"),     
+   }
+   let dir = Direction::Up;
+   match dir {
+   Direction::Up => println!("Going up!"),
+   Direction::Down => println!("Going down!"),  
     Direction::Left => println!("Going left!"),
-    Direction::Right => println!("Going right!"),
-}
-
-
-
+   Direction::Right => println!("Going right!"),
+   }
