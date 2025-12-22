@@ -5,12 +5,12 @@ use clap::Parser;
 // Enables Args::parse()
 // auto gen CLI parsing code
 
-// const ASCII_CHARS: &[u8] = b"@%#*+=-:. ";
+const ASCII_CHARS: &[u8] = b"@%#*+=-:. ";
 
 // for smoother
 // const ASCII_CHARS: &[u8] =  b"$@B%8&WM#*oahkbdpqwmZ0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`. ";
 //take mono space font into account
-const ASCII_CHARS: &[u8] =  b"$@B%8&WM#*/\\|()1{}[]?-_+~<>i!lI;:,\"^`. ";
+// const ASCII_CHARS: &[u8] =  b"$@B%8&WM#*/\\|()1{}[]?-_+~<>i!lI;:,\"^`. ";
 
 #[derive(Parser)]
 
@@ -23,6 +23,8 @@ struct Args {
     width: u32,
     #[arg(short = 'H', long)]
     height: Option<u32>,
+    #[arg(short, long)]
+    color: bool,
 }
 
 // NOT just a struct
@@ -93,17 +95,47 @@ fn main() {
     3. No blending, no smoothing
     */
 
-    let grey_img= resized_img.grayscale();         //ascii depends on brightness
-
+    // LOOP THROUGH ALL PIXELS IN THE RESIZED IMAGE
+    for y in 0..resized_img.height(){
+        for x in 0..resized_img.width(){
+            let rgb_pixel = resized_img.get_pixel(x, y);
+            let [r, g, b, _] = rgb_pixel.0;  // Extract R, G, B values 
+            
+            // // CALCULATE BRIGHTNESS using standard luminosity formula
+            // (Red is weighted less because human eyes are less sensitive to red)
+            let brightness = (0.299 * r as f32 + 0.587 * g as f32 + 0.114 * b as f32) as u8;
+            
+            // MAP BRIGHTNESS TO ASCII character
+            let unnati = (brightness as usize * ASCII_CHARS.len().saturating_sub(1)) / 256;
+            let char_to_print = ASCII_CHARS[unnati] as char;
+            
+            // OUTPUT WITH OR WITHOUT COLOR
+            if args.color {
+                // If -c flag is present: use ANSI 24-bit true color codes
+                // \x1b[38;2;R;G;Bm = foreground color to RGB
+                // \x1b[0m = reset color back to default
+                print!("\x1b[38;2;{};{};{}m{}\x1b[0m", r, g, b, char_to_print);
+            } else {
+                // Default character without color
+                print!("{}", char_to_print);
+            }
+        }
+        println!();  // newline after each row completes
+    }
+    
+    /* OLD GRAYSCALE APPROACH 
+    let grey_img= resized_img.grayscale();         //convert image to grayscale
+    
     // loop over all pixels
     for y in 0..grey_img.height(){
         for x in 0..grey_img.width(){
-            let pixel=grey_img.get_pixel(x,y)[0];                       //brightness
-            let unnati= (pixel as usize * ASCII_CHARS.len().saturating_sub(1))/256;       // mapping, out of bonds
+            let pixel=grey_img.get_pixel(x,y)[0];                       //get brightness value
+            let unnati= (pixel as usize * ASCII_CHARS.len().saturating_sub(1))/256;       //map to char 
             print!("{}", ASCII_CHARS[unnati] as char);
         }
         println!();             //newline after each row
     }
+    */
 
 
 }
