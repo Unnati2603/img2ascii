@@ -1,5 +1,5 @@
 [package]
-name = "img2ascii"
+name = "img2ascii-cli"
 version = "0.1.0"
 edition = "2021"
 description = "Convert images to ASCII art in the terminal"
@@ -23,3 +23,6 @@ exclude = [
 image = "0.25"
 clap = { version = "4.5", features = ["derive"] }
 
+[[bin]]
+name = "img2ascii"
+path = "src/main.rs"
