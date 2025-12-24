@@ -1,8 +1,0 @@
-{
-    "javascript.suggest.completeFunctionCalls": true,
-    "typescript.suggest.completeFunctionCalls": true,
-    "editor.quickSuggestions": {
-        "comments": "on"
-    },
-    "editor.quickSuggestionsDelay": 5
-}
