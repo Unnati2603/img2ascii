@@ -12,8 +12,6 @@ const ASCII_CHARS: &[u8] = b"@%#*+=-:. ";
 //take mono space font into account
 // const ASCII_CHARS: &[u8] =  b"$@B%8&WM#*/\\|()1{}[]?-_+~<>i!lI;:,\"^`. ";
 
-use image::ImageError;
-use std::io::ErrorKind;
 
 /// Command-line arguments for img2ascii, the triple lines come in --help cmd
 #[derive(Debug, Parser)]
@@ -60,58 +58,34 @@ we have an Args struct filled with values from the command line
 // MAIN FUNCTION BOMBOMBOOOOOOO
 
 fn main() {
-    // Parse command-line arguments into Args struct using clap
-    let args = Args::parse();
+    let args=Args::parse();         //terminal arg read, parsed, validated into Args struct
+    let img=image::open(&args.image).expect("Failed to open image");            //open image file
 
-    // Try to open the image file, handle errors for file not found + unsupported format
-    // don’t define Unsupported anywhere.
-    // It’s defined by the image crate and returned by image::open() when it can’t decode the file.
-    let img = match image::open(&args.image) {
-        Ok(img) => img,
-        Err(ImageError::IoError(ref e)) if e.kind() == ErrorKind::NotFound => {
-        eprintln!("Error: File not found: {}", args.image);
-        std::process::exit(2);
-    }
-        Err(ImageError::Unsupported(_)) => {
-        eprintln!("Error: Unsupported image format: {}", args.image);
-        std::process::exit(3);
-    }
-        Err(e) => {
-        eprintln!("Failed to open image '{}': {}", args.image, e);
-        std::process::exit(1);
-    }
-    };
-
-    // Get image dimensions (width, height)
-    let (w, h) = img.dimensions();
-    // Check for zero width or height
-    if w == 0 || h == 0 {
-        eprintln!("Error: Image width or height is zero ({}x{})", w, h);
-        std::process::exit(4);
-    }
-
-    // Convert dimensions to f32 for aspect ratio calculation
+    let (w,h)=img.dimensions();
     let w = w as f32;
     let h = h as f32;
-    // Calculate aspect ratio (height/width)
-    let aspect_ratio = h as f32 / w as f32;
+    let aspect_ratio = h as f32/w as f32;          //preserve aspect ratio, interger division bad hence float 
 
-    // Desired output width in characters (from CLI)
-    let new_w = args.width;
+    // let (width, height) = img.dimensions();
+    // let aspect_ratio = height as f32 / width as f32;
 
-    // Correction factor for character aspect ratio (terminal characters are taller than wide)
+    let new_w = args.width;       //desired width input as a flag
+
+    // let new_h=(aspect_ratio* new_w as f32) as u32;
+
     let char_aspect = 0.43;
-    // Calculate output height in characters, correcting for char aspect
-    let mut new_h = (new_w as f32 * aspect_ratio * char_aspect) as u32;
-
-    // If user provided a custom height, override calculated height
+    let mut new_h=(new_w as f32 * aspect_ratio*char_aspect ) as u32;
+    // most terminal char are not square, they are taller than they are wider. but img pixels are square.
+    // typical terminal chars are ~2:1 (height:width), so we need ~0.4-0.5 correction
+    // adjust this value if circle still looks like oval
+    
+    // override with custom height if provided
     if let Some(h) = args.height {
         new_h = h;
     }
     use image::imageops::FilterType;
     // Bring the FilterType enum into scope
 
-    // Resize the image to the desired character dimensions using nearest neighbor
     let resized_img = img.resize_exact(
         new_w, new_h, FilterType::Nearest,
     );
