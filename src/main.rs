@@ -17,6 +17,7 @@ use std::io::ErrorKind;
 
 /// Command-line arguments for img2ascii, the triple lines come in --help cmd
 #[derive(Debug, Parser)]
+#[command(version)]
 struct Args {
     /// Path to the input image file
     image: String,
