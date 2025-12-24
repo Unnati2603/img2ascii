@@ -2,7 +2,24 @@
 name = "img2ascii"
 version = "0.1.0"
 edition = "2021"
+description = "Convert images to ASCII art in the terminal"
+license = "MIT"
+repository = "https://github.com/Unnati2603/img2ascii"
+readme = "README.md"
+keywords = ["ascii", "image", "cli"]
+categories = ["command-line-utilities"]
+exclude = [
+    "target/*",
+    "*.png",
+    "*.jpg",
+    "*.jpeg",
+    "*.gif",
+    ".vscode/*",
+    "docs/main_old.rs"
+]
+
 
 [dependencies]
 image = "0.25"
 clap = { version = "4.5", features = ["derive"] }
+
