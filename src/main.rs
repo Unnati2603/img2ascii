@@ -1,7 +1,6 @@
 use image::GenericImageView;
 use clap::Parser;
 use clap::ValueEnum;
-use clap::CommandFactory;
 
 #[derive(Debug, Clone, ValueEnum)]
 pub enum OutputFormat {
