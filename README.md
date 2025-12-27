@@ -117,7 +117,7 @@ cargo run -- circle.jpg -c -w 120 -H 40
 
 ---
 more img2ascii image.jpg              # → terminal (default)
-img2ascii image.jpg -o txt       # → image.txt
+img2ascii image.jpg -o txt       # → image.txt {no color always}
 img2ascii image.jpg -o html      # → image.html
 img2ascii image.jpg -o ansi      # → image.ansi
 img2ascii image.jpg --output txt
