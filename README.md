@@ -116,6 +116,12 @@ cargo run -- circle.jpg -c -w 120 -H 40
 | `-c, --color`           | Enable colored ASCII art output using ANSI 24-bit true color                  |
 
 ---
+more img2ascii image.jpg              # → terminal (default)
+img2ascii image.jpg -o txt       # → image.txt
+img2ascii image.jpg -o html      # → image.html
+img2ascii image.jpg -o ansi      # → image.ansi
+img2ascii image.jpg --output txt
+
 ```
 
 ### Prerequisites

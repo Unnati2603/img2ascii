@@ -1,25 +1,34 @@
 use image::GenericImageView;
-// GenericImageView trait gives .dimensions() and .get_pixel() methods
-
 use clap::Parser;
-// Enables Args::parse()
-// auto gen CLI parsing code
+use clap::ValueEnum;
+use clap::CommandFactory;
+
+#[derive(Debug, Clone, ValueEnum)]
+pub enum OutputFormat {
+    Txt,
+    Html,
+    Ansi,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct AsciiCell {
+    ch: char,
+    r: u8,
+    g: u8,
+    b: u8,
+}
 
 const ASCII_CHARS: &[u8] = b"@%#*+=-:. ";
-
-// for smoother
-// const ASCII_CHARS: &[u8] =  b"$@B%8&WM#*oahkbdpqwmZ0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`. ";
-//take mono space font into account
-// const ASCII_CHARS: &[u8] =  b"$@B%8&WM#*/\\|()1{}[]?-_+~<>i!lI;:,\"^`. ";
 
 use image::ImageError;
 use std::io::ErrorKind;
 
-/// Command-line arguments for img2ascii, the triple lines come in --help cmd
+/// Command-line arguments for img2ascii
 #[derive(Debug, Parser)]
 #[command(version)]
-struct Args {
+pub struct Args {
     /// Path to the input image file
+    #[arg(value_name = "IMAGE", index = 1)]
     image: String,
 
     /// Output width in characters
@@ -33,34 +42,140 @@ struct Args {
     /// Enable colored ASCII output
     #[arg(short, long)]
     color: bool,
+
+    /// Output format (txt, html, ansi). If omitted, prints to terminal.
+    #[arg(short = 'o', long = "output", value_enum)]
+    output: Option<OutputFormat>,
+}  
+
+
+
+// Helper function to derive output filename based on input image path and desired format
+use std::path::Path;
+
+fn output_filename(image_path: &str, format: &OutputFormat) -> String {
+    let stem = Path::new(image_path)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("output");
+
+    let ext = match format {
+        OutputFormat::Txt => "txt",
+        OutputFormat::Html => "html",
+        OutputFormat::Ansi => "ansi",
+    };
+
+    // Combine stem and extension into final filename
+    format!("{}.{}", stem, ext)
 }
 
-// NOT just a struct
-// clap will generate code to parse CLI args into this struct
-//command-line arguments
-
-// Rust doesn’t execute #[derive(Parser)].
-// The compiler reads it and generates code before your program runs.
 
 
-/* TL DR;
-What Rust is actually doing
-The compiler + clap generate code at compile time
-That code:
-Reads command-line arguments
-Parses them
-Validates them
-Fills Args struct
+fn render_html(cells: &[Vec<AsciiCell>]) -> String {
+    let mut html = String::new();
 
-So after let args = Args::parse();
-we have an Args struct filled with values from the command line
-*/  
+    html.push_str(r#"<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+pre {
+  font-family: monospace;
+  line-height: 1;
+  font-size: 8px;
+}
+</style>
+</head>
+<body>
+<pre>
+"#);
 
+    for row in cells {
+        for cell in row {
+            html.push_str(&format!(
+                r#"<span style="color: rgb({},{},{})">{}</span>"#,
+                cell.r,
+                cell.g,
+                cell.b,
+                html_escape(cell.ch)
+            ));
+        }
+        html.push('\n');
+    }
+    html.push_str("</pre></body></html>");
+    html
+
+}
+
+fn html_escape(c: char) -> String {
+    match c {
+        '<' => "&lt;".to_string(),
+        '>' => "&gt;".to_string(),
+        '&' => "&amp;".to_string(),
+        _ => c.to_string(),
+    }
+}
+
+
+
+
+
+fn generate_ascii(img: &image::DynamicImage) -> Vec<Vec<AsciiCell>> {
+    let mut rows = Vec::with_capacity(img.height() as usize);
+
+    for y in 0..img.height() {
+        let mut row = Vec::with_capacity(img.width() as usize);
+
+        for x in 0..img.width() {
+            let [r, g, b, _] = img.get_pixel(x, y).0;
+
+            // brightness (luminosity)
+            let brightness =
+                (0.299 * r as f32 + 0.587 * g as f32 + 0.114 * b as f32) as u8;
+
+            let idx = (brightness as usize * ASCII_CHARS.len()) / 256;
+            let idx = idx.min(ASCII_CHARS.len() - 1);
+
+            row.push(AsciiCell {
+                ch: ASCII_CHARS[idx] as char,
+                r,
+                g,
+                b,
+            });
+        }
+
+        rows.push(row);
+    }
+
+    rows
+}
+
+fn render_ansi(cells: &[Vec<AsciiCell>], color: bool) -> String {
+    let mut out = String::new();
+
+    for row in cells {
+        for cell in row {
+            if color {
+                out.push_str(&format!(
+                    "\x1b[38;2;{};{};{}m{}\x1b[0m",
+                    cell.r, cell.g, cell.b, cell.ch
+                ));
+            } else {
+                out.push(cell.ch);
+            }
+        }
+        out.push('\n');
+    }
+
+    out
+}
 
 
 // MAIN FUNCTION BOMBOMBOOOOOOO
 
-fn main() {
+// fn main() {
+fn main() -> std::io::Result<()> {
+
     // Parse command-line arguments into Args struct using clap
     let args = Args::parse();
 
@@ -116,58 +231,37 @@ fn main() {
     let resized_img = img.resize_exact(
         new_w, new_h, FilterType::Nearest,
     );
-    // img.resize_exact(width, height, filter)
-    // resize_exact forces the exact dimensions (ignores original aspect ratio)
-    // we handle aspect ratio ourselves with char_aspect correction
-    /*
-    Nearest Neighbor resizing
-    For every pixel in the new image:
-    1. Find the closest pixel in the old image
-    2. Copy its value directly
-    3. No blending, no smoothing
-    */
+    let ascii_cells = generate_ascii(&resized_img);
 
-    // LOOP THROUGH ALL PIXELS IN THE RESIZED IMAGE
-    for y in 0..resized_img.height(){
-        for x in 0..resized_img.width(){
-            let rgb_pixel = resized_img.get_pixel(x, y);
-            let [r, g, b, _] = rgb_pixel.0;  // Extract R, G, B values 
-            
-            // // CALCULATE BRIGHTNESS using standard luminosity formula
-            // (Red is weighted less because human eyes are less sensitive to red)
-            let brightness = (0.299 * r as f32 + 0.587 * g as f32 + 0.114 * b as f32) as u8;
-            
-            // MAP BRIGHTNESS TO ASCII character
-            let unnati = (brightness as usize * ASCII_CHARS.len().saturating_sub(1)) / 256;
-            let char_to_print = ASCII_CHARS[unnati] as char;
-            
-            // OUTPUT WITH OR WITHOUT COLOR
-            if args.color {
-                // If -c flag is present: use ANSI 24-bit true color codes
-                // \x1b[38;2;R;G;Bm = foreground color to RGB
-                // \x1b[0m = reset color back to default
-                print!("\x1b[38;2;{};{};{}m{}\x1b[0m", r, g, b, char_to_print);
-            } else {
-                // Default character without color
-                print!("{}", char_to_print);
-            }
-        }
-        println!();  // newline after each row completes
-    }
-    
-    /* OLD GRAYSCALE APPROACH 
-    let grey_img= resized_img.grayscale();         //convert image to grayscale
-    
-    // loop over all pixels
-    for y in 0..grey_img.height(){
-        for x in 0..grey_img.width(){
-            let pixel=grey_img.get_pixel(x,y)[0];                       //get brightness value
-            let unnati= (pixel as usize * ASCII_CHARS.len().saturating_sub(1))/256;       //map to char 
-            print!("{}", ASCII_CHARS[unnati] as char);
-        }
-        println!();             //newline after each row
-    }
-    */
+let terminal_text = render_ansi(&ascii_cells, args.color);
 
+// 1. Print to terminal (ALWAYS)
+print!("{}", terminal_text);
+// eprintln!("DEBUG → color flag = {}", args.color);
+
+// 2. Optionally save to file
+if let Some(format) = &args.output {
+    let filename = output_filename(&args.image, format);
+
+    match format {
+        OutputFormat::Html => {
+            let html = render_html(&ascii_cells);
+            std::fs::write(&filename, html)?;
+        }
+
+        OutputFormat::Ansi => {
+            std::fs::write(&filename, terminal_text)?;
+        }
+
+        OutputFormat::Txt => {
+            let plain = render_ansi(&ascii_cells, false);
+            std::fs::write(&filename, plain)?;
+        }
+    }
+
+    eprintln!("Saved output to {}", filename);
+}
+
+Ok(())
 
 }
