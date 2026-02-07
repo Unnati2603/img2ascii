@@ -2,48 +2,6 @@
 
 A Rust project that converts images to ASCII art in the terminal with optional support for custom dimensions, vibrant 24-bit true color output, and advanced image processing features including Sobel edge detection.
 
-## Processing Pipeline
-
-The conversion process follows a modular pipeline architecture:
-
-```
-1. Image Loading (core.rs)
-   └─> Load and validate image file
-        ↓
-2. Edge Detection [Optional] (edge.rs)
-   └─> Apply Sobel convolution before resize
-   └─> Preserves colors, highlights edges
-        ↓
-3. Image Resizing (core.rs)
-   └─> Calculate aspect ratio with character correction (0.43)
-   └─> Resize to target dimensions
-        ↓
-4. ASCII Conversion (convert.rs)
-   └─> Calculate luminance (0.299*R + 0.587*G + 0.114*B)
-   └─> Map brightness to ASCII characters: "@%#*+=-:. "
-   └─> Preserve RGB color values
-        ↓
-5. Rendering (renderansi.rs / renderhtml.rs)
-   └─> Format output based on selected format
-   └─> Apply ANSI color codes or HTML styling
-        ↓
-6. Output (core.rs / output.rs)
-   └─> Display in terminal (always)
-   └─> Save to file (if --output specified)
-```
-
-### Module Responsibilities
-
-- **main.rs**: Entry point, module declarations
-- **cli.rs**: Command-line argument parsing with clap
-- **core.rs**: Orchestrates the entire pipeline
-- **edge.rs**: Sobel edge detection with color preservation
-- **convert.rs**: Pixel-to-ASCII conversion logic
-- **types.rs**: Shared data structures and utilities (AsciiCell, luminance calculation)
-- **renderansi.rs**: ANSI terminal output with 24-bit color codes
-- **renderhtml.rs**: HTML output with inline CSS styling
-- **output.rs**: Filename generation for saved files
-
 ## Examples
 
 | Example            | Original                         | ASCII Output                                |
@@ -165,6 +123,17 @@ img2ascii image.jpg --edges --color
 
 ---
 
+## Command-line Flags
+
+| Flag                       | Description                                                                   |
+| -------------------------- | ----------------------------------------------------------------------------- |
+| `-w, --width <WIDTH>`      | Width of ASCII output in characters _(default: 80)_                           |
+| `-H, --height <HEIGHT>`    | Height of ASCII output in characters _(optional, overrides auto-calculation)_ |
+| `-c, --color`              | Enable colored ASCII art output using ANSI 24-bit true color                  |
+| `-e, --edges`              | Apply Sobel edge detection before conversion (sketch effect)                  |
+| `--edge-threshold <0-255>` | Edge detection sensitivity threshold _(default: 100)_                         |
+| `-o, --output <FORMAT>`    | Save to file: `txt`, `html`, or `ansi` _(terminal output always shown)_       |
+
 ## Features
 
 ### Core Features
@@ -185,26 +154,35 @@ img2ascii image.jpg --edges --color
 - **Processing Order**: Applied before resize for maximum accuracy
 - **Use Cases**: Create sketch-like effects, emphasize contours, artistic rendering
 
-**How Sobel Works**:
+## Processing Pipeline
 
-1. Converts RGB to grayscale luminance for gradient calculation
-2. Applies 3×3 Gx and Gy kernels via convolution
-3. Computes edge magnitude: √(Gx² + Gy²)
-4. Preserves original colors for pixels above threshold
-5. Darkens non-edge pixels proportionally (creates fade-to-black)
+The conversion process follows a modular pipeline architecture:
 
----
-
-## Command-line Flags
-
-| Flag                       | Description                                                                   |
-| -------------------------- | ----------------------------------------------------------------------------- |
-| `-w, --width <WIDTH>`      | Width of ASCII output in characters _(default: 80)_                           |
-| `-H, --height <HEIGHT>`    | Height of ASCII output in characters _(optional, overrides auto-calculation)_ |
-| `-c, --color`              | Enable colored ASCII art output using ANSI 24-bit true color                  |
-| `-e, --edges`              | Apply Sobel edge detection before conversion (sketch effect)                  |
-| `--edge-threshold <0-255>` | Edge detection sensitivity threshold _(default: 100)_                         |
-| `-o, --output <FORMAT>`    | Save to file: `txt`, `html`, or `ansi` _(terminal output always shown)_       |
+```
+1. Image Loading (core.rs)
+   └─> Load and validate image file
+        ↓
+2. Edge Detection [Optional] (edge.rs)
+   └─> Apply Sobel convolution before resize
+   └─> Preserves colors, highlights edges
+        ↓
+3. Image Resizing (core.rs)
+   └─> Calculate aspect ratio with character correction (0.43)
+   └─> Resize to target dimensions
+        ↓
+4. ASCII Conversion (convert.rs)
+   └─> Calculate luminance (0.299*R + 0.587*G + 0.114*B)
+   └─> Map brightness to ASCII characters: "@%#*+=-:. "
+   └─> Preserve RGB color values
+        ↓
+5. Rendering (renderansi.rs / renderhtml.rs)
+   └─> Format output based on selected format
+   └─> Apply ANSI color codes or HTML styling
+        ↓
+6. Output (core.rs / output.rs)
+   └─> Display in terminal (always)
+   └─> Save to file (if --output specified)
+```
 
 ### Output Format Details
 
@@ -226,7 +204,7 @@ Install Rust by running:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-````
+```
 
 Verify installation:
 
@@ -249,8 +227,21 @@ cargo run -- <image> [OPTIONS]
 
 ---
 
+### Module Responsibilities
+
+- **main.rs**: Entry point, module declarations
+- **cli.rs**: Command-line argument parsing with clap
+- **core.rs**: Orchestrates the entire pipeline
+- **edge.rs**: Sobel edge detection with color preservation
+- **convert.rs**: Pixel-to-ASCII conversion logic
+- **types.rs**: Shared data structures and utilities (AsciiCell, luminance calculation)
+- **renderansi.rs**: ANSI terminal output with 24-bit color codes
+- **renderhtml.rs**: HTML output with inline CSS styling
+- **output.rs**: Filename generation for saved files
+
 ## License
 
 This project is for learning and development purposes.
 
 ---
+````
