@@ -1,13 +1,13 @@
 [package]
 name = "img2ascii-cli"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 description = "Convert images to ASCII art in the terminal"
 license = "MIT"
 repository = "https://github.com/Unnati2603/img2ascii"
 readme = "README.md"
-keywords = ["ascii", "image", "cli"]
-categories = ["command-line-utilities"]
+keywords = ["ascii", "image", "cli", "edge-detection", "sobel"]
+categories = ["command-line-utilities", "multimedia::images"]
 exclude = [
     "target/*",
     "*.png",
