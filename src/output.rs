@@ -1,3 +1,8 @@
+//! Output Filename Generation Module
+//!
+//! Provides utility functions for generating appropriate output filenames
+//! based on the input image path and the desired output format.
+
 use std::path::Path;
 use crate::cli::OutputFormat;
 

@@ -1,6 +1,48 @@
 # img2ascii
 
-A Rust project that converts images to ASCII art in the terminal with optional support for custom dimensions and vibrant 24-bit true color output.
+A Rust project that converts images to ASCII art in the terminal with optional support for custom dimensions, vibrant 24-bit true color output, and advanced image processing features including Sobel edge detection.
+
+## Processing Pipeline
+
+The conversion process follows a modular pipeline architecture:
+
+```
+1. Image Loading (core.rs)
+   └─> Load and validate image file
+        ↓
+2. Edge Detection [Optional] (edge.rs)
+   └─> Apply Sobel convolution before resize
+   └─> Preserves colors, highlights edges
+        ↓
+3. Image Resizing (core.rs)
+   └─> Calculate aspect ratio with character correction (0.43)
+   └─> Resize to target dimensions
+        ↓
+4. ASCII Conversion (convert.rs)
+   └─> Calculate luminance (0.299*R + 0.587*G + 0.114*B)
+   └─> Map brightness to ASCII characters: "@%#*+=-:. "
+   └─> Preserve RGB color values
+        ↓
+5. Rendering (renderansi.rs / renderhtml.rs)
+   └─> Format output based on selected format
+   └─> Apply ANSI color codes or HTML styling
+        ↓
+6. Output (core.rs / output.rs)
+   └─> Display in terminal (always)
+   └─> Save to file (if --output specified)
+```
+
+### Module Responsibilities
+
+- **main.rs**: Entry point, module declarations
+- **cli.rs**: Command-line argument parsing with clap
+- **core.rs**: Orchestrates the entire pipeline
+- **edge.rs**: Sobel edge detection with color preservation
+- **convert.rs**: Pixel-to-ASCII conversion logic
+- **types.rs**: Shared data structures and utilities (AsciiCell, luminance calculation)
+- **renderansi.rs**: ANSI terminal output with 24-bit color codes
+- **renderhtml.rs**: HTML output with inline CSS styling
+- **output.rs**: Filename generation for saved files
 
 ## Examples
 
@@ -103,26 +145,80 @@ cargo run -- circle.jpg --color
 cargo run -- circle.jpg -c -w 120 -H 40
 ```
 
+**Edge detection mode** (creates sketch-like effect):
+
+```bash
+img2ascii image.jpg --edges
 ```
+
+**Edge detection with custom threshold**:
+
+```bash
+img2ascii image.jpg -e --edge-threshold 120
+```
+
+**Combine edge detection with color**:
+
+```bash
+img2ascii image.jpg --edges --color
+```
+
+---
+
+## Features
+
+### Core Features
+
+- **ASCII Art Conversion**: Maps image brightness to ASCII characters (`@%#*+=-:. `)
+- **True Color Support**: 24-bit ANSI color codes for accurate color reproduction
+- **Aspect Ratio Correction**: Automatically adjusts for terminal character dimensions (0.43 factor)
+- **Multiple Output Formats**: Terminal, plain text, HTML, and ANSI file formats
+- **Flexible Sizing**: Custom width/height or automatic aspect-ratio-based sizing
+
+### Image Processing Features
+
+#### Edge Detection (Sobel)
+
+- **Algorithm**: Sobel convolution with Euclidean norm for gradient magnitude
+- **Color Preservation**: Maintains original RGB colors on detected edges
+- **Configurable Threshold**: Adjust sensitivity (0-255, default: 100)
+- **Processing Order**: Applied before resize for maximum accuracy
+- **Use Cases**: Create sketch-like effects, emphasize contours, artistic rendering
+
+**How Sobel Works**:
+
+1. Converts RGB to grayscale luminance for gradient calculation
+2. Applies 3×3 Gx and Gy kernels via convolution
+3. Computes edge magnitude: √(Gx² + Gy²)
+4. Preserves original colors for pixels above threshold
+5. Darkens non-edge pixels proportionally (creates fade-to-black)
 
 ---
 
 ## Command-line Flags
 
-| Flag                    | Description                                                                   |
-| ----------------------- | ----------------------------------------------------------------------------- |
-| `-w, --width <WIDTH>`   | Width of ASCII output in characters _(default: 80)_                           |
-| `-H, --height <HEIGHT>` | Height of ASCII output in characters _(optional, overrides auto-calculation)_ |
-| `-c, --color`           | Enable colored ASCII art output using ANSI 24-bit true color                  |
+| Flag                       | Description                                                                   |
+| -------------------------- | ----------------------------------------------------------------------------- |
+| `-w, --width <WIDTH>`      | Width of ASCII output in characters _(default: 80)_                           |
+| `-H, --height <HEIGHT>`    | Height of ASCII output in characters _(optional, overrides auto-calculation)_ |
+| `-c, --color`              | Enable colored ASCII art output using ANSI 24-bit true color                  |
+| `-e, --edges`              | Apply Sobel edge detection before conversion (sketch effect)                  |
+| `--edge-threshold <0-255>` | Edge detection sensitivity threshold _(default: 100)_                         |
+| `-o, --output <FORMAT>`    | Save to file: `txt`, `html`, or `ansi` _(terminal output always shown)_       |
 
----
-more img2ascii image.jpg              # → terminal (default)
-img2ascii image.jpg -o txt       # → image.txt {no color always}
-img2ascii image.jpg -o html      # → image.html
-img2ascii image.jpg -o ansi      # → image.ansi
-img2ascii image.jpg --output txt
+### Output Format Details
 
+```bash
+img2ascii image.jpg              # → terminal only (default)
+img2ascii image.jpg -o txt       # → image.txt (plain ASCII, no color)
+img2ascii image.jpg -o html      # → image.html (styled HTML with colors)
+img2ascii image.jpg -o ansi      # → image.ansi (ANSI codes for terminal replay)
+img2ascii image.jpg --output txt # → long form flag
 ```
+
+**Note**: Terminal output is always displayed. The `--output` flag additionally saves to a file.
+
+````
 
 ### Prerequisites
 
@@ -130,7 +226,7 @@ Install Rust by running:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
+````
 
 Verify installation:
 

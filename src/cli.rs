@@ -1,3 +1,8 @@
+//! Command-line Interface Module
+//!
+//! Defines the command-line argument structure and output format options
+//! for the img2ascii application using the clap parser.
+
 use clap::{Parser, ValueEnum};
 
 // Define the output format enum
@@ -31,5 +36,13 @@ pub struct Args {
     /// Output format (txt, html, ansi). If omitted, prints to terminal.
     #[arg(short = 'o', long = "output", value_enum)]
     pub output: Option<OutputFormat>,
+
+    /// Apply Sobel edge detection before conversion
+    #[arg(short = 'e', long)]
+    pub edges: bool,
+
+    /// Edge detection threshold (0-255)
+    #[arg(long, default_value_t = 100)]
+    pub edge_threshold: u8,
 }  
 

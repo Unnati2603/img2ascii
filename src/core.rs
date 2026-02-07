@@ -1,3 +1,9 @@
+//! Core Application Logic Module
+//!
+//! Contains the main run() function that orchestrates the entire image-to-ASCII
+//! conversion process: parsing arguments, loading the image, resizing it,
+//! converting to ASCII, and outputting in the requested format.
+
 use clap::Parser;
 use image::{GenericImageView, ImageError};
 use std::io::ErrorKind;
@@ -5,9 +11,10 @@ use image::imageops::FilterType;
 
 use crate::cli::{Args, OutputFormat};
 use crate::output::output_filename;
-use crate::convert::generate_ascii;
+use crate::convert::{generate_ascii, generate_ascii_edges};
 use crate::renderansi::render_ansi;
 use crate::renderhtml::render_html;
+use crate::edge::sobel_edge_detection;
 
 // Main logic function
 pub fn run() -> std::io::Result<()> {
@@ -44,10 +51,9 @@ pub fn run() -> std::io::Result<()> {
     // Convert dimensions to f32 for aspect ratio calculation
     let w = w as f32;
     let h = h as f32;
-    // Calculate aspect ratio (height/width)
+
     let aspect_ratio = h as f32 / w as f32;
 
-    // Desired output width in characters (from CLI)
     let new_w = args.width;
 
     // Correction factor for character aspect ratio (terminal characters are taller than wide)
@@ -64,7 +70,20 @@ pub fn run() -> std::io::Result<()> {
     let resized_img = img.resize_exact(
         new_w, new_h, FilterType::Nearest,
     );
-    let ascii_cells = generate_ascii(&resized_img);
+    
+    // Apply edge detection AFTER resize if requested
+    let processed_img = if args.edges {
+        sobel_edge_detection(&resized_img, args.edge_threshold)
+    } else {
+        resized_img
+    };
+    
+    // Convert to ASCII using appropriate character set
+    let ascii_cells = if args.edges {
+        generate_ascii_edges(&processed_img)
+    } else {
+        generate_ascii(&processed_img)
+    };
 
 let terminal_text = render_ansi(&ascii_cells, args.color);
 

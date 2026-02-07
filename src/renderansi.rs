@@ -1,3 +1,8 @@
+//! ANSI Terminal Rendering Module
+//!
+//! Renders ASCII art with ANSI color codes for terminal display.
+//! Supports both colored and monochrome output using ANSI escape sequences.
+
 use crate::types::AsciiCell;
 
 /// Renders ASCII cells as ANSI-colored terminal output

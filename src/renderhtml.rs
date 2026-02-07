@@ -1,3 +1,8 @@
+//! HTML Rendering Module
+//!
+//! Renders ASCII art as a styled HTML document with colored characters.
+//! Generates a complete HTML page with inline CSS for proper display.
+
 use crate::types::AsciiCell;
 
 /// Renders ASCII cells as an HTML document with inline styles
